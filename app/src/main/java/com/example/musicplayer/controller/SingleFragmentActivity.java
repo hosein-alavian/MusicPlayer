@@ -1,3 +1,4 @@
+/*
 package com.example.musicplayer.controller;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,7 +18,8 @@ public abstract class SingleFragmentActivity extends AppCompatActivity {
 
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(getResourceId(),createFragment())
+                .add(getResourceId(),createFragment())
                 .commit();
     }
 }
+*/

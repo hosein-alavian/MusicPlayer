@@ -5,12 +5,13 @@ import android.os.Bundle;
 import com.example.musicplayer.R;
 import com.google.android.material.tabs.TabLayout;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 
-public class MainActivity extends SingleFragmentActivity {
+public class MainActivity extends AppCompatActivity {
 
-    @Override
+/*    @Override
     public Fragment createFragment() {
         return null;
     }
@@ -23,12 +24,16 @@ public class MainActivity extends SingleFragmentActivity {
     @Override
     public int getResourceId() {
         return R.id.container;
-    }
+    }*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
+        setContentView(R.layout.activity_main);
+
+        SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(
+                this,
+                getSupportFragmentManager());
         ViewPager viewPager = findViewById(R.id.view_pager);
         viewPager.setAdapter(sectionsPagerAdapter);
         TabLayout tabs = findViewById(R.id.tabs);
