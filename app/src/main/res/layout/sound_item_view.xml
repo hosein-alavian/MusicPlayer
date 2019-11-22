@@ -5,16 +5,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="4dp"
-    android:minHeight="50dp"
+    android:minHeight="60dp"
     android:orientation="vertical"
-    app:cardCornerRadius="7dp">
+    app:cardCornerRadius="20dp">
 
     <TextView
         android:id="@+id/soundName_textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center|left"
-        android:layout_margin="7dp"
+        android:layout_margin="10dp"
         android:text="sound name"
         android:textColor="@android:color/white"
         android:textSize="24sp" />

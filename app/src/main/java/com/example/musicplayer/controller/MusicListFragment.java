@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.musicplayer.R;
+import com.example.musicplayer.model.BeatBoxRepository;
 import com.example.musicplayer.model.Sound;
 
 import java.util.List;
@@ -60,8 +61,8 @@ public class MusicListFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_music_list, container, false);
         mRecyclerView = view.findViewById(R.id.musicList_RecyclerView);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        BeatBox beatBox=new BeatBox(getActivity());
-        SoundAdapter soundAdapter=new SoundAdapter(beatBox.getSounds());
+        BeatBoxRepository beatBoxRepository = BeatBoxRepository.getInstance(getContext());
+        SoundAdapter soundAdapter=new SoundAdapter(beatBoxRepository.getSounds());
         mRecyclerView.setAdapter(soundAdapter);
 
 
@@ -100,7 +101,16 @@ public class MusicListFragment extends Fragment {
 
         public SoundHolder(@NonNull View itemView) {
             super(itemView);
-            mSoundNameTV = itemView.findViewById(R.id.soundName_textView);
+/*            mSoundNameTV = itemView.findViewById(R.id.soundName_textView);
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    getFragmentManager().beginTransaction()
+                            .add(R.id.container,PlayMusicFragment.newInstance(mSound.getSoundId()))
+                            .addToBackStack(MusicListFragment.class.getSimpleName())
+                            .commit();
+                }
+            });*/
         }
 
         void bindSound(Sound sound){

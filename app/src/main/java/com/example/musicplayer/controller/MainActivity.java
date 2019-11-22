@@ -31,13 +31,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(
+/*        SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(
                 this,
                 getSupportFragmentManager());
         ViewPager viewPager = findViewById(R.id.view_pager);
         viewPager.setAdapter(sectionsPagerAdapter);
         TabLayout tabs = findViewById(R.id.tabs);
-        tabs.setupWithViewPager(viewPager);
+        tabs.setupWithViewPager(viewPager);*/
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.container,PlayMusicFragment.newInstance())
+                .commit();
 
     }
 }
