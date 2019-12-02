@@ -6,4 +6,7 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="channelId">com.example.musicplayer.controller.notificationchannel</string>
+    <string name="repeat_current_song">Repeat current song</string>
+    <string name="shuffle">Shuffle</string>
+    <string name="play_in_order">Play in order</string>
 </resources>

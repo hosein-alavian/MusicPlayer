@@ -1,9 +1,13 @@
+/*
 package com.example.musicplayer.controller;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -11,14 +15,14 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.example.musicplayer.R;
-import com.example.musicplayer.model.BeatBoxRepository;
+import com.example.musicplayer.model.MusicRepository;
 
-import static com.example.musicplayer.model.BeatBoxRepository.TAG;
+import static com.example.musicplayer.model.MusicRepository.TAG;
 
 public class MyService extends Service {
 
     private NotificationCompat.Builder builder;
-    private BeatBoxRepository mRepositoryInstance;
+    private MusicRepository mRepositoryInstance;
 
     public static Intent newIntent(Context context) {
         return new Intent(context, MyService.class);
@@ -30,7 +34,8 @@ public class MyService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        mRepositoryInstance = BeatBoxRepository.getInstance(this);
+        createNotificationChannel();
+        mRepositoryInstance = MusicRepository.getInstance(this);
 
         PendingIntent pi = PendingIntent.getActivity(
                 this,
@@ -38,9 +43,9 @@ public class MyService extends Service {
                 new Intent(this, MainActivity.class),
                 0);
 
-        Intent resumeI = MyService.newIntent(this);
-        resumeI.setAction("RESUME");
-        PendingIntent resumePi = PendingIntent.getService(this, 0, resumeI, 0);
+        Intent playI = MyService.newIntent(this);
+        playI.setAction("PLAY");
+        PendingIntent playPi = PendingIntent.getService(this, 0, playI, 0);
 
         Intent previousI = MyService.newIntent(this);
         previousI.setAction("PREVIOUS");
@@ -52,12 +57,19 @@ public class MyService extends Service {
 
         if (builder == null) {
             builder = new NotificationCompat.Builder(this,
-                    getString(R.string.channelId))
+                    getString(R.string.channelId));
+            builder
                     .setSmallIcon(R.drawable.notification_small_icon)
                     .setContentIntent(pi)
-                    .addAction(R.drawable.previous_music_icon, "PREVIOUS", previousPi)
-                    .addAction(R.drawable.pause_icon, "RESUME", resumePi)
-                    .addAction(R.drawable.next_music_icon, "NEXT", nextPi);
+                    .addAction(R.drawable.previous_music_icon, "PREVIOUS", previousPi);
+                    if(mRepositoryInstance.getMediaPlayer()!=null) {
+                    builder.addAction(mRepositoryInstance.getMediaPlayer().isPlaying() ?
+                                        R.drawable.resume_music_icon : R.drawable.pause_icon,
+                                "PLAY",
+                                playPi);
+                    }
+                    builder.addAction(R.drawable.next_music_icon, "NEXT", nextPi)
+                    .setAutoCancel(true);
 
             if (intent.getAction().equals("PLAY")) {
                 Log.i(TAG, "onStartCommand: " + intent.getAction() + startId);
@@ -66,26 +78,28 @@ public class MyService extends Service {
                 startForeground(1, builder.build());
                 mRepositoryInstance.play();
             }
-            if (intent.getAction().equals("STOP")) {
+*/
+/*            if (intent.getAction().equals("PAUSE")) {
+                Log.i(TAG, "onStartCommand: " + intent.getAction() + startId);
+                startForeground(1, builder.build());
+                mRepositoryInstance.pause();
+            }*//*
+
+            if (intent.getAction().equals("RELEASE")) {
                 Log.i(TAG, "onStartCommand: " + intent.getAction() + startId);
                 mRepositoryInstance.release();
                 stopSelf();
             }
-            if (intent.getAction().equals("RESUME")) {
-                Log.i(TAG, "onStartCommand: " + intent.getAction() + startId);
-                startForeground(1, builder.build());
-                mRepositoryInstance.resumePause();
-            }
             if (intent.getAction().equals("NEXT")) {
                 Log.i(TAG, "onStartCommand: " + intent.getAction() + startId);
                 builder.setSubText("ALARM");
-                startForeground(1,builder.build());
+                startForeground(1, builder.build());
                 mRepositoryInstance.next(this);
             }
             if (intent.getAction().equals("PREVIOUS")) {
                 Log.i(TAG, "onStartCommand: " + intent.getAction() + startId);
                 builder.setSubText("RINGTONE");
-                startForeground(1,builder.build());
+                startForeground(1, builder.build());
                 mRepositoryInstance.previous(this);
             }
         }
@@ -94,10 +108,25 @@ public class MyService extends Service {
 
     }
 
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel serviceChannel = new NotificationChannel(
+                    getString(R.string.channelId),
+                    "Foreground Service Channel",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            );
+
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(serviceChannel);
+        }
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
 //        mRepositoryInstance.release();
+//        mRepositoryInstance.pause();
+        Log.i(TAG, "onDestroy: myService");
     }
 
     @Nullable
@@ -106,3 +135,4 @@ public class MyService extends Service {
         return null;
     }
 }
+*/

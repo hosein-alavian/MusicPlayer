@@ -1,21 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     style="@style/AppTheme.ItemView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
-    android:minHeight="60dp"
+    android:minHeight="50dp"
     android:orientation="vertical"
-    app:cardCornerRadius="20dp">
+    app:cardBackgroundColor="#1C2450">
 
-    <TextView
-        android:id="@+id/soundName_textView"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center|left"
-        android:layout_margin="10dp"
-        android:text="sound name"
-        android:textColor="@android:color/white"
-        android:textSize="24sp" />
+        android:layout_height="match_parent"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp">
+
+        <TextView
+            android:id="@+id/soundName_textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="5dp"
+            android:text="tracks name"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            app:layout_constraintStart_toEndOf="@+id/track_imageView"
+            app:layout_constraintTop_toTopOf="@+id/track_imageView" />
+
+        <View
+            android:id="@+id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="0.2dp"
+            android:layout_gravity="bottom"
+            android:background="#FFFFFF"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/artist_textView"
+            android:layout_width="57dp"
+            android:layout_height="14dp"
+            android:layout_gravity="bottom|left"
+            android:text="artist name"
+            android:textColor="#B4FFFFFF"
+            android:textSize="12sp"
+            android:visibility="invisible"
+            app:layout_constraintStart_toStartOf="@+id/soundName_textView"
+            app:layout_constraintTop_toBottomOf="@+id/soundName_textView" />
+
+        <ImageView
+            android:id="@+id/track_imageView"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            app:layout_constraintBottom_toTopOf="@id/divider"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:srcCompat="@tools:sample/avatars" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

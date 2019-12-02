@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.musicplayer">
 
+<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>-->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -9,7 +12,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".controller.SingleFragmentActivity"></activity>
+<!--        <service
+            android:name=".controller.MyService"
+            android:enabled="true"
+            android:exported="true"></service>-->
+        <!--        <activity android:name=".controller.SingleFragmentActivity"></activity>-->
         <activity
             android:name=".controller.MainActivity"
             android:label="@string/app_name"

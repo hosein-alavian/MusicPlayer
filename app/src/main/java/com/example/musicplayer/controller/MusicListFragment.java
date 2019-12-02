@@ -12,11 +12,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.musicplayer.R;
-import com.example.musicplayer.model.BeatBoxRepository;
-import com.example.musicplayer.model.Sound;
+import com.example.musicplayer.model.MusicRepository;
+import com.example.musicplayer.model.Track;
 
 import java.util.List;
 
@@ -29,7 +32,6 @@ public class MusicListFragment extends Fragment {
 
     public static final String TAB_POSITION = "tab position";
     private RecyclerView mRecyclerView;
-    private Sound mSound;
     private int mTabPosition;
 
     public MusicListFragment() {
@@ -41,7 +43,7 @@ public class MusicListFragment extends Fragment {
         MusicListFragment fragment = new MusicListFragment();
 
         Bundle args = new Bundle();
-        args.putInt(TAB_POSITION,tabPosition);
+        args.putInt(TAB_POSITION, tabPosition);
         fragment.setArguments(args);
         return fragment;
     }
@@ -49,8 +51,8 @@ public class MusicListFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(getArguments()!=null){
-            mTabPosition=getArguments().getInt(TAB_POSITION);
+        if (getArguments() != null) {
+            mTabPosition = getArguments().getInt(TAB_POSITION);
         }
     }
 
@@ -61,72 +63,95 @@ public class MusicListFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_music_list, container, false);
         mRecyclerView = view.findViewById(R.id.musicList_RecyclerView);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        BeatBoxRepository beatBoxRepository = BeatBoxRepository.getInstance(getContext());
-        SoundAdapter soundAdapter=new SoundAdapter(beatBoxRepository.getSounds());
-        mRecyclerView.setAdapter(soundAdapter);
+        MusicRepository beatBoxRepository = MusicRepository.getInstance(getContext(), getActivity());
+        TracksAdapter tracksAdapter = new TracksAdapter(beatBoxRepository.getTracks());
+        mRecyclerView.setAdapter(tracksAdapter);
 
 
         return view;
     }
 
-    public class SoundAdapter extends RecyclerView.Adapter<SoundHolder>{
+    public class TracksAdapter extends RecyclerView.Adapter<TracksAdapter.SoundHolder> {
 
-        private List<Sound> mSounds;
+        private List<Track> mTracks;
+        private Track mTrack;
 
-        public SoundAdapter(List<Sound> sounds) {
-            mSounds = sounds;
+        public TracksAdapter(List<Track> tracks) {
+            mTracks = tracks;
         }
 
         @NonNull
         @Override
         public SoundHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = getLayoutInflater().inflate(R.layout.sound_item_view, parent,false);
+            View view = getLayoutInflater().inflate(R.layout.sound_item_view, parent, false);
             return new SoundHolder(view);
         }
 
         @Override
         public void onBindViewHolder(@NonNull SoundHolder holder, int position) {
-            holder.bindSound(mSounds.get(position));
+            holder.bindSound(mTracks.get(position),position);
         }
 
         @Override
         public int getItemCount() {
-            return mSounds==null?0:mSounds.size();
+            return mTracks == null ? 0 : mTracks.size();
         }
-    }
 
-    public class SoundHolder extends RecyclerView.ViewHolder{
 
-        private TextView mSoundNameTV;
+        public class SoundHolder extends RecyclerView.ViewHolder {
 
-        public SoundHolder(@NonNull View itemView) {
-            super(itemView);
-/*            mSoundNameTV = itemView.findViewById(R.id.soundName_textView);
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    getFragmentManager().beginTransaction()
-                            .add(R.id.container,PlayMusicFragment.newInstance(mSound.getSoundId()))
-                            .addToBackStack(MusicListFragment.class.getSimpleName())
-                            .commit();
+            private TextView mtrackNameTV;
+            private ImageView mTrackImageView;
+            private TextView mArtistTV;
+            private int mPosition;
+
+            public SoundHolder(@NonNull View itemView) {
+                super(itemView);
+                mtrackNameTV = itemView.findViewById(R.id.soundName_textView);
+                mTrackImageView = itemView.findViewById(R.id.track_imageView);
+                mArtistTV = itemView.findViewById(R.id.artist_textView);
+                if (mTabPosition == 0)
+                    itemView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            getFragmentManager().beginTransaction()
+                                    .add(R.id.container, PlayMusicFragment.newInstance(mPosition))
+                                    .addToBackStack(MusicListFragment.class.getSimpleName())
+                                    .commit();
+                        }
+                    });
+            }
+
+            void bindSound(Track track,int position) {
+                this.mPosition = position;
+                mTrack = track;
+                switch (mTabPosition) {
+                    case 0:
+                        mtrackNameTV.setText(
+                                track.getTrackName().length() > 29 ?
+                                        track.getTrackName().substring(0, 29) + "..." :
+                                        track.getTrackName());
+                        mArtistTV.setVisibility(View.VISIBLE);
+                        mArtistTV.setText(track.getArtist());
+                        break;
+                    case 1:
+                        mtrackNameTV.setText(track.getArtist().length() > 29 ?
+                                track.getArtist().substring(0, 29) + "..." :
+                                track.getArtist());
+                        break;
+                    case 2:
+                        mtrackNameTV.setText( track.getAlbumName().length()>29?
+                                track.getAlbumName().substring(0,29)+"...":
+                                track.getAlbumName()
+                        );
+                        break;
                 }
-            });*/
-        }
-
-        void bindSound(Sound sound){
-            mSound = sound;
-            switch (mTabPosition) {
-                case 0:
-                    mSoundNameTV.setText(sound.getName());
-                    break;
-                case 1:
-                    mSoundNameTV.setText(sound.getArtist());
-                    break;
-                case 2:
-                    mSoundNameTV.setText(sound.getAlbumName());
-                    break;
+                Glide
+                        .with(itemView)
+                        .load(track.getTrackImage())
+                        .apply(new RequestOptions().placeholder(R.drawable.track_cover))
+                        .into(mTrackImageView);
             }
         }
     }
-
 }

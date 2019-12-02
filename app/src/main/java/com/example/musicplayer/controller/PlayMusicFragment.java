@@ -1,31 +1,34 @@
 package com.example.musicplayer.controller;
 
 
-import android.content.Intent;
 import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-
-import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
-import androidx.core.util.TimeUtils;
-import androidx.fragment.app.Fragment;
-
 import android.os.Handler;
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.fragment.app.Fragment;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.musicplayer.R;
-import com.example.musicplayer.model.BeatBoxRepository;
-import com.example.musicplayer.model.Sound;
+import com.example.musicplayer.model.MusicRepository;
+import com.example.musicplayer.model.Track;
 
-import java.sql.Time;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -33,33 +36,38 @@ import java.util.Calendar;
 public class PlayMusicFragment extends Fragment {
 
 
-    public static final String SOUND_ID = "sound id";
+    public static final String TRACK_POSITION = "sound id";
+    public static final Uri DEFAULT_ALARM_ALERT_URI = Settings.System.DEFAULT_ALARM_ALERT_URI;
     private ImageButton mPlayPauseButton;
     private ImageButton mPreviousButton;
     private ImageButton mNextButton;
     private ImageButton mRepeatAllButton;
     private ImageButton mShuffleButton;
-    private Integer mSoundId;
+    private int mTrackIndex;
     private int mCount;
-    private Sound mSound;
-    private BeatBoxRepository mBeatBoxRepository;
+    private Track mTrack;
     private MediaPlayer mMediaPlayer;
     private SeekBar mSeekBar;
     private Handler mHandler;
     private TextView mEndTimeTV;
     private TextView mPassedTimeTV;
     private Runnable mRunnable;
+    private MusicRepository mMusicRepository;
+    private ImageView mAlbumArt;
+    private TextView mMusicNameTV;
+    private TextView mMusicArtistTV;
+    private List<Track> mTracks;
 
     public PlayMusicFragment() {
         // Required empty public constructor
     }
 
-    public static PlayMusicFragment newInstance() {
+    public static PlayMusicFragment newInstance(int mPosition) {
 
         PlayMusicFragment fragment = new PlayMusicFragment();
 
         Bundle args = new Bundle();
-//        args.putInt(SOUND_ID,soundId);
+        args.putInt(TRACK_POSITION, mPosition);
         fragment.setArguments(args);
         return fragment;
     }
@@ -68,14 +76,20 @@ public class PlayMusicFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mSoundId = getArguments().getInt(SOUND_ID);
+            mTrackIndex = getArguments().getInt(TRACK_POSITION);
         }
-/*        mBeatBoxRepository = BeatBoxRepository.getInstance(getContext());
-        mSound = mBeatBoxRepository.getSound(mSoundId);
-        mBeatBoxRepository.play(mSound);*/
 //        startService();
 
+        mHandler = new Handler();
+/*        try {
+            mMediaPlayer.stop();
+            mMediaPlayer.reset();
+            mMediaPlayer.release();
 
+        // mplayer.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }*/
     }
 
     @Override
@@ -86,8 +100,13 @@ public class PlayMusicFragment extends Fragment {
                 R.layout.fragment_play_music,
                 container,
                 false);
-        mHandler = new Handler();
-        prepareMediaPlayer();
+
+/*        mMediaPlayer =new MediaPlayer();
+        try {*/
+//            mMediaPlayer=MediaPlayer.create(getContext(),DEFAULT_ALARM_ALERT_URI);
+/*        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
         initUI(view);
         setListener();
         return view;
@@ -101,31 +120,53 @@ public class PlayMusicFragment extends Fragment {
         mShuffleButton = view.findViewById(R.id.shuffleMusic_imageButton);
         mSeekBar = view.findViewById(R.id.seekBar);
         mPassedTimeTV = view.findViewById(R.id.passedTime_TextView);
-        mPassedTimeTV.setText(convertTimeFormat(mMediaPlayer.getCurrentPosition()));
+        mPassedTimeTV.setText(convertTimeFormat(0));
         mEndTimeTV = view.findViewById(R.id.endTime_textView);
+        mAlbumArt = view.findViewById(R.id.albumArt_imageView);
+//        mAlbumArt.setImageBitmap(mTrack.getTrackImage());
+        mMusicNameTV = view.findViewById(R.id.musicName_textView);
+        mMusicArtistTV = view.findViewById(R.id.musicArtist_textView);
+
+        prepareMediaPlayer();
+        trackInitUI(mTrack);
     }
 
     public void prepareMediaPlayer() {
-        mMediaPlayer = MediaPlayer.create(
-                getActivity(),
-                Settings.System.DEFAULT_ALARM_ALERT_URI);
-/*        mBeatBoxRepository = BeatBoxRepository.getInstance(getContext());
-        mMediaPlayer=mBeatBoxRepository.getMediaPlayer();*/
+
 //        playCycle();
+        mMusicRepository = MusicRepository.getInstance(getContext(),
+                getActivity());
+        mTracks = mMusicRepository.getTracks();
+        mTrack = mTracks.get(mTrackIndex);
+        mMusicRepository.start(mTrack);
+        mMediaPlayer = mMusicRepository.getMediaPlayer();
+        playCycle();
+        setShuffleTracks();
+        mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                playNextTrack();
+            }
+        });
     }
 
     private void setListener() {
+
         mPlayPauseButton.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void onClick(View view) {
-
-//                resumePauseService();
+                mMediaPlayer = mMusicRepository.getMediaPlayer();
                 if (!mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.start();
+//                mMusicRepository.play();
+//                    startService();
+                    mMusicRepository.play(mTrack);
                     playCycle();
                     mPlayPauseButton.setImageResource(R.drawable.resume_music_icon);
                 } else {
-                    mMediaPlayer.pause();
+//                    mMusicRepository.pause();
+//                    pauseService();
+                    mMusicRepository.pause();
                     mPlayPauseButton.setImageResource(R.drawable.pause_icon);
                 }
 
@@ -133,37 +174,40 @@ public class PlayMusicFragment extends Fragment {
         });
 
         mNextButton.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void onClick(View view) {
 //                nextService();
-//                mBeatBoxRepository.next(getContext());
-                if (mMediaPlayer.isPlaying())
-                    mMediaPlayer.stop();
-                mMediaPlayer = MediaPlayer.create(getContext(),
+//                mMusicRepository.next(getContext());
+/*                if (mMediaPlayer.isPlaying())
+                    mMediaPlayer.release();*/
+/*                mMediaPlayer = MediaPlayer.create(getContext(),
                         Settings.System.DEFAULT_RINGTONE_URI);
-                mMediaPlayer.start();
-                mPlayPauseButton.setImageResource(R.drawable.resume_music_icon);
-                mHandler.removeCallbacks(mRunnable);
-                playCycle();
+                mMusicRepository.setMediaPlayer(mMediaPlayer);*/
+                playNextTrack();
             }
         });
 
         mPreviousButton.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void onClick(View view) {
-//                prevousService();
-//                mBeatBoxRepository.previous(getContext());
-                if (mMediaPlayer.isPlaying())
-                    mMediaPlayer.stop();
-                mMediaPlayer = MediaPlayer.create(getContext(),
+//                previousService();
+//                mMusicRepository.previous(getContext());
+/*                if (mMediaPlayer.isPlaying())
+                    mMediaPlayer.release();*/
+/*                mMediaPlayer = MediaPlayer.create(getContext(),
                         Settings.System.DEFAULT_ALARM_ALERT_URI);
-                mMediaPlayer.start();
-                mPlayPauseButton.setImageResource(R.drawable.resume_music_icon);
+                mMusicRepository.setMediaPlayer(mMediaPlayer);*/
+                Track previousTrack =
+                        mTracks.get(mTrackIndex - 1 == -1 ? 0 : mTrackIndex--);
                 mHandler.removeCallbacks(mRunnable);
+                trackInitUI(previousTrack);
+                mMusicRepository.previous(previousTrack);
+//                previousService();
                 playCycle();
             }
         });
-
 
         mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
@@ -174,12 +218,11 @@ public class PlayMusicFragment extends Fragment {
                 mEndTimeTV.setText(dateFormat);
             }
         });
+
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                if (b) {
-                    mMediaPlayer.seekTo(i);
-                }
+                if (b) mMediaPlayer.seekTo(i);
             }
 
             @Override
@@ -192,23 +235,90 @@ public class PlayMusicFragment extends Fragment {
 
             }
         });
+
+        mRepeatAllButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                mMediaPlayer = mMusicRepository.getMediaPlayer();
+                if (!mMediaPlayer.isLooping()) {
+                    mMediaPlayer.setLooping(true);
+                    mRepeatAllButton.setImageResource(R.drawable.repeat_one_music_icon);
+                    Toast.makeText(getContext(),
+                            getString(R.string.repeat_current_song),
+                            Toast.LENGTH_SHORT).show();
+                } else {
+                    mMediaPlayer.setLooping(false);
+                    mRepeatAllButton.setImageResource(R.drawable.repeat_all_music_icon);
+                    Toast.makeText(getContext(),
+                            "Repeat list",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        mShuffleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mMusicRepository.setShuffle(!mMusicRepository.isShuffle());
+                setShuffleTracks();
+
+            }
+        });
     }
 
-    private void startService() {
+    private void setShuffleTracks() {
+       /* if(mMusicRepository.isShuffle()) {
+            Collections.shuffle(mTracks);
+            mShuffleButton.setImageResource(R.drawable.shuffle_music_icon);
+            Toast.makeText(getContext(),
+                    getString(R.string.shuffle),
+                    Toast.LENGTH_SHORT).show();
+        }else{
+            mTracks= mMusicRepository.getTracks();
+            mShuffleButton.setImageResource(R.drawable.play_in_order_music_icon);
+            Toast.makeText(getContext(),
+                    getString(R.string.play_in_order),
+                    Toast.LENGTH_SHORT).show();
+        }*/
+    }
+
+    private void playNextTrack() {
+        Track nextTrack =
+                mTracks.get(mTrackIndex + 1 == mTracks.size() ? mTrackIndex : ++mTrackIndex);
+        mHandler.removeCallbacks(mRunnable);
+        trackInitUI(nextTrack);
+        mMusicRepository.next(nextTrack);
+//                nextService();
+        playCycle();
+    }
+
+    private void trackInitUI(Track track) {
+        mPlayPauseButton.setImageResource(R.drawable.resume_music_icon);
+        Glide
+                .with(this)
+                .load(track.getTrackImage())
+                .apply(new RequestOptions().placeholder(R.drawable.track_cover))
+                .into(mAlbumArt);
+        mMusicNameTV.setText(track.getTrackName());
+        mMusicArtistTV.setText(track.getArtist());
+    }
+
+/*    private void startService() {
         Intent intent = MyService.newIntent(getActivity());
         intent.setAction("PLAY");
         ContextCompat.startForegroundService(getActivity(), intent);
     }
 
-    private void stopService() {
+    private void releaseService() {
         Intent intent = MyService.newIntent(getActivity());
-        intent.setAction("STOP");
+        intent.setAction("RELEASE");
         ContextCompat.startForegroundService(getActivity(), intent);
     }
 
-    private void resumePauseService() {
+    private void pauseService() {
         Intent intent = MyService.newIntent(getActivity());
-        intent.setAction("RESUME");
+        intent.setAction("PAUSE");
         ContextCompat.startForegroundService(getActivity(), intent);
 
     }
@@ -219,26 +329,29 @@ public class PlayMusicFragment extends Fragment {
         ContextCompat.startForegroundService(getContext(), intent);
     }
 
-    private void prevousService() {
+    private void previousService() {
         Intent intent = MyService.newIntent(getContext());
         intent.setAction("PREVIOUS");
         ContextCompat.startForegroundService(getContext(), intent);
-    }
+    }*/
 
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-//        stopService();
-        mMediaPlayer.release();
+//        releaseService();
+        mMusicRepository.release();
         mHandler.removeCallbacks(mRunnable);
     }
 
     public void playCycle() {
+        mMediaPlayer = mMusicRepository.getMediaPlayer();
+
         int currentPosition = mMediaPlayer.getCurrentPosition();
         String dateFormat = convertTimeFormat(currentPosition);
         mSeekBar.setProgress(currentPosition);
         mPassedTimeTV.setText(dateFormat);
+
 
         if (mMediaPlayer.isPlaying()) {
             mRunnable = new Runnable() {
@@ -248,14 +361,20 @@ public class PlayMusicFragment extends Fragment {
                 }
             };
 
-            mHandler.postDelayed(mRunnable, 0);
+            mHandler.postDelayed(mRunnable, 500);
         }
     }
 
     private String convertTimeFormat(int currentPosition) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(currentPosition);
-        return new SimpleDateFormat("00:ss")
-                .format(calendar.getTime());
+/*        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(currentPosition);*/
+        return String.format("%02d : %02d",
+                TimeUnit.MILLISECONDS.toMinutes(currentPosition),
+                TimeUnit.MILLISECONDS.toSeconds(currentPosition) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(currentPosition))
+        );
+/*        return new SimpleDateFormat("mm:ss")
+                .format(calendar.getTime());*/
     }
+
 }
